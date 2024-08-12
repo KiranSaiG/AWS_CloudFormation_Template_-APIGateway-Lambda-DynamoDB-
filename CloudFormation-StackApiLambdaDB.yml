@@ -38,7 +38,8 @@ Resources:
         Ref: LambdaFuncName
       Handler: index.handler
       Runtime: nodejs12.x
-      Role: !GetAtt IAMRole.Arn
+      Role: 
+        Ref: IAMRole
     DependsOn:
       - DynamoDBTable
   DynamoDBTable:
@@ -67,10 +68,11 @@ Resources:
   APIGatewayResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
-      RestApiId: !Ref APIGatewayRestAPI
-      ParentId: !GetAtt
-        - APIGatewayRestAPI
-        - RootResourceId
+      RestApiId:
+        Ref: APIGatewayRestAPI
+      ParentId:
+        GetAtt: APIGatewayRestAPI.RootResourceId
+
       PathPart:
         Ref: LambdaFuncName
     DependsOn:
@@ -78,8 +80,10 @@ Resources:
   APIGatewayMethod:
     Type: 'AWS::ApiGateway::Method'
     Properties:
-      RestApiId: !Ref APIGatewayRestAPI
-      ResourceId: !Ref APIGatewayResource
+      RestApiId:
+        Ref: APIGatewayRestAPI
+      ResourceId:
+        Ref: APIGatewayResource
       HttpMethod: POST
       AuthorizationType: NONE
       MethodResponses:
@@ -89,16 +93,19 @@ Resources:
         IntegrationResponses:
           - StatusCode: 200
         IntegrationHttpMethod: POST
-        Uri: !Sub
+        Uri: 
+          Sub:
           - >-
             arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFuncNameArn}/invocations
-          - LambdaFuncNameArn: !GetAtt LambdaFunction.Arn
+          - LambdaFuncNameArn:
+              GetAtt: LambdaFunction.Arn
     DependsOn:
       - APIGatewayResource
   APIGatewayDeployment:
     Type: 'AWS::ApiGateway::Deployment'
     Properties:
-      RestApiId: !Ref APIGatewayRestAPI
+      RestApiId: 
+        Ref: APIGatewayRestAPI
       StageName:
         Ref: EnvironmentName
     DependsOn:
@@ -107,7 +114,8 @@ Resources:
     Type: 'AWS::Lambda::Permission'
     Properties:
       Action: 'lambda:InvokeFunction'
-      FunctionName: !GetAtt LambdaFunction.Arn
+      FunctionName: 
+        GetAtt: LambdaFunction.Arn
       Principal: apigateway.amazonaws.com
     DependsOn:
       - APIGatewayDeployment
@@ -151,13 +159,13 @@ Resources:
 Parameters:
   LambdaFuncName:
     Type: String
-    Default: Lambda_api-lambda-db
+    Default: HTC_POC_Lambda_Funtion
   DynamoDBTableName:
     Type: String
-    Default: Dynamo_api-lambda-db
+    Default: HTC_POC_api-lambda-db
   APIName:
     Type: String
-    Default: API_api-lambda-db
+    Default: HTC_POC_api-lambda-db
   EnvironmentName:
     Type: String
     Default: Prod
